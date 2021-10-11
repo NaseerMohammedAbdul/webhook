@@ -1,0 +1,40 @@
+name: Dispatch Workflow
+
+on:
+  issue_comment:
+    types: [created]
+    
+  #push:
+   # branches:
+    #  - '*'       # Matches any branch
+    #  - '*/*'     # matches every branch containing a single '/'
+    #  - '**'      # matches every branch
+
+jobs:
+  autoDeployDispatch:
+    runs-on: ubuntu-latest
+    steps:
+    
+       - name: Json File output
+         run: |
+           echo '${{toJson(github.event)}}' >> file.json
+           ls -ltr
+           cat file.json
+           
+       - name: get nested property
+         id: comment
+         uses: notiz-dev/github-action-json-property@release
+         with: 
+            path: file.json
+            prop_path: 'issue.number'
+       - run: echo ${{steps.comment.outputs.prop}} 
+           
+       - name: Slash Command Dispatch
+         uses: peter-evans/slash-command-dispatch@v2
+         env:
+            GEN_TOKEN: ${{ secrets.APP_KEY }}
+         with:
+           token: ${{ env.GEN_TOKEN }}
+           commands: |
+             deploy
+           repository: NaseerMohammedAbdul/dispatch
